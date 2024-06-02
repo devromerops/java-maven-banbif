@@ -103,6 +103,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
+          -Dsonar.organization=sums
           -Dsonar.projectKey=xxsumsxx_${{ github.event.repository.name }}
           -Dsonar.scm.provider=git
           -Dsonar.sources=.
