@@ -124,7 +124,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: mvn sonar:sonar -Pcoverage\
+      run: mvn sonar:sonar -Pcoverage \
         -Dsonar.projectKey=xxsumsxx_${{ github.event.repository.name }} \
         -Dsonar.host.url=sonarcloud.io \
         -Dsonar.login=${{ secrets.SONAR_TOKEN }}
