@@ -120,21 +120,14 @@ jobs:
         # echo "report=-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco-aggregate/jacoco.xml" >> $GITHUB_OUTPUT
         echo "binaries=-Dsonar.java.binaries=target/classes" >> $GITHUB_OUTPUT
 
-    - name: 🔍 Quality
-      uses: sonarsource/sonarcloud-github-action@v2.2.0
+    - name: SonarQube Scan
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      with:
-        args: >
-          -Dsonar.organization=sums
-          -Dsonar.projectKey=xxsumsxx_${{ github.event.repository.name }}
-          -Dsonar.scm.provider=git
-          -Dsonar.sources=.
-          ${{ steps.set-sonarcloud.outputs.arg_extra }}
-          ${{ steps.set-sonarcloud.outputs.report }}
-          ${{ steps.set-sonarcloud.outputs.binaries }}
-          -Pcoverage
+      run: mvn sonar:sonar -Pcoverage\
+        -Dsonar.projectKey=xxsumsxx_${{ github.event.repository.name }} \
+        -Dsonar.host.url=sonarcloud.io \
+        -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
   build_image:
     runs-on: ubuntu-latest
