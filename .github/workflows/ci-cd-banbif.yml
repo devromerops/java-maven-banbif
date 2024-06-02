@@ -9,6 +9,14 @@ on:
     branches:
       - main
       - feature/**
+      
+      secrets:
+        SONAR_TOKEN:
+          required: true
+        DOCKER_USER:
+          required: true
+        DOCKER_PASS:
+          required: true  
 
 jobs:
   create_cache:
@@ -65,7 +73,55 @@ jobs:
           ${{ runner.os }}-maven-
     - name: Run tests
       run: mvn test
-
+  
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository fetch dept 0
+      uses: actions/checkout@v4
+      with:
+        fetch_dept: 0
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'adopt'
+        java-version: '21'
+    - name: 📝 UnitTest
+      working-directory: .
+      run: ${{ inputs.npm-test-command }}
+    - name: 🎭 Set sonarcloud
+      id: set-sonarcloud
+      working-directory: .
+      run: |
+        case ${{github.event_name}} in
+          pull_request)
+            echo "arg_extra=-Dsonar.projectName= -Dsonar.token=${{ secrets.SONAR_TOKEN }} -Dsonar.host.url=sonarcloud.io -Dsonar.pullrequest.key=$PR_KEY -Dsonar.pullrequest.branch=$PR_BRANCH -Dsonar.pullrequest.base=$BASE_BRANCH" >> $GITHUB_OUTPUT
+            ;;
+          push)
+            echo "arg_extra=-Dsonar.branch.name=${{ github.ref_name }} -Dsonar.projectName=${{ github.event.repository.name }} -Dsonar.host.url=sonarcloud.io -Dsonar.token=${{ secrets.SONAR_TOKEN }}" >> $GITHUB_OUTPUT
+            ;;
+          *)
+            echo "arg_extra=" >> $GITHUB_OUTPUT
+          esac
+          if [[ ${{ inputs.flag-unit-test }} == true ]]; then
+              echo "report=-Dsonar.coverage.jacoco.xmlReportPaths=${{ inputs.reportPaths }}jacoco.xml" >> $GITHUB_OUTPUT
+            else
+              echo "report=-Dmaven.test.skip=true" >> $GITHUB_OUTPUT
+            fi
+    - name: 🔍 Quality
+      uses: sonarsource/sonarcloud-github-action@v2.2.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        args: >
+          -Dsonar.organization=xxsumsxx
+          -Dsonar.projectKey=xxsumsxx_${{ github.event.repository.name }}
+          -Dsonar.scm.provider=git
+          -Dsonar.exclusions=${{ inputs.sonar-exclusions }}
+          -Dsonar.sources=.
+          ${{ steps.set-sonarcloud.outputs.arg_extra }}
+          ${{ steps.set-sonarcloud.outputs.lcov }}
   build_image:
     runs-on: ubuntu-latest
     needs: maven_test
@@ -82,5 +138,4 @@ jobs:
         password: ${{ secrets.DOCKER_PASS }}
     - name: Build and push Docker image
       run: |
-        docker build -t techworldwithnana/demo-app:juice-shop-1.1 .
-        docker push techworldwithnana/demo-app:juice-shop-1.1
+        docker build -t xxsumsxx/${{ github.event.repository.name }} .
