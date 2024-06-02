@@ -45,41 +45,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         args: --verbose --source .
 
-  maven_test:
-    runs-on: ubuntu-latest
-    needs: create_cache
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'adopt'
-        java-version: '21'
-    - name: Restore cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
-    - name: Compile project
-      run: mvn clean compile
-    - name: Run tests
-      run: mvn test
-    - name: Generate code coverage report
-      run: mvn jacoco:report
-    - name: Archive test results
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: target/site/jacoco/
-    - name: Archive compiled classes
-      uses: actions/upload-artifact@v3
-      with:
-        name: compiled-classes
-        path: target/classes/
-
   sonarcloud:
     runs-on: ubuntu-latest
     needs: maven_test
@@ -93,42 +58,17 @@ jobs:
       with:
         distribution: 'adopt'
         java-version: '21'
-    - name: Download test results
-      uses: actions/download-artifact@v3
-      with:
-        name: test-results
-        path: target/site/jacoco/
-    - name: Download compiled classes
-      uses: actions/download-artifact@v3
-      with:
-        name: compiled-classes
-        path: target/classes/
-    - name: 🎭 Set sonarcloud
-      id: set-sonarcloud
-      run: |
-        case ${{ github.event_name }} in
-          pull_request)
-            echo "arg_extra=-Dsonar.projectName=${{ github.event.repository.name }} -Dsonar.token=${{ secrets.SONAR_TOKEN }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.pullrequest.key=${{ github.event.number }} -Dsonar.pullrequest.branch=${{ github.head_ref }} -Dsonar.pullrequest.base=${{ github.base_ref }}" >> $GITHUB_OUTPUT
-            ;;
-          push)
-            echo "arg_extra=-Dsonar.branch.name=${{ github.ref_name }} -Dsonar.projectName=${{ github.event.repository.name }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=${{ secrets.SONAR_TOKEN }}" >> $GITHUB_OUTPUT
-            ;;
-          *)
-            echo "arg_extra=" >> $GITHUB_OUTPUT
-            ;;
-        esac
-        # echo "report=-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco-aggregate/jacoco.xml" >> $GITHUB_OUTPUT
-        echo "binaries=-Dsonar.java.binaries=target/classes" >> $GITHUB_OUTPUT
+    - name: Install dependencies
+      run: mvn install -DskipTests
+
+    - name: Run tests and generate coverage report
+      run: mvn clean verify -Pcoverage
 
     - name: SonarQube Scan
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: mvn sonar:sonar -Pcoverage \
-        -Dsonar.projectKey=xxsumsxx_${{ github.event.repository.name }} \
-        -Dsonar.host.url="https://sonarcloud.io" \
-        -Dsonar.organization=sums
-        -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+      run: mvn sonar:sonar -Pcoverage -Dsonar.projectKey=xxsumsxx_${{ github.event.repository.name }} -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=sums -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
   build_image:
     runs-on: ubuntu-latest
