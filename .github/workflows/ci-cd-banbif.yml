@@ -94,11 +94,8 @@ jobs:
             echo "arg_extra=" >> $GITHUB_OUTPUT
             ;;
         esac
-        if [[ ${{ github.event.inputs.flag-unit-test }} == true ]]; then
-            echo "report=-Dsonar.coverage.jacoco.xmlReportPaths=${{ github.event.inputs.reportPaths }}jacoco.xml" >> $GITHUB_OUTPUT
-          else
-            echo "report=-Dmaven.test.skip=true" >> $GITHUB_OUTPUT
-          fi
+          echo "report=-Dsonar.coverage.jacoco.xmlReportPaths=jacoco.xml" >> $GITHUB_OUTPUT
+
     - name: 🔍 Quality
       uses: sonarsource/sonarcloud-github-action@v2.2.0
       env:
