@@ -9,5 +9,8 @@ public class HolamundoApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(HolamundoApplication.class, args);
 	}
+	public static void two(String[] args) {
+		SpringApplication.run(HolamundoApplication.class, args);
+	}
 
 }
