@@ -7,12 +7,18 @@ on:
       - feature/**
     paths:
       - .github/workflows/maven-build.yml
+      - src/**
+      - pom.xml
+      - Dockerfile
   pull_request: 
     branches:
       - main
       - feature/**
     paths:
       - .github/workflows/maven-build.yml
+      - src/**
+      - pom.xml
+      - Dockerfile
 
 env:
   IMAGE_NAME: xxsumsxx/java-maven-banbif
