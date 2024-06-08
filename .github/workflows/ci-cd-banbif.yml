@@ -67,7 +67,7 @@ jobs:
       run: mvn jacoco:report
     - name: Verify JaCoCo Report
       run: |
-        if [ ! -f target/jacoco/jacoco.xml ]; then
+        if [ ! -f target/site/jacoco/jacoco.xml ]; then
           echo "JaCoCo report not found!"
           exit 1
         fi
