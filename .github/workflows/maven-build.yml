@@ -39,7 +39,11 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-          java-package: jre
+      - name: Set up Gitleaks
+        uses: zricethezav/gitleaks-action@v2  
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          args: --verbose --source .
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
