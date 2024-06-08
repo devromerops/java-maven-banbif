@@ -5,10 +5,14 @@ on:
     branches:
       - main
       - feature/**
+    paths:
+      - .github/workflows/maven-build.yml
   pull_request: 
     branches:
       - main
       - feature/**
+    paths:
+      - .github/workflows/maven-build.yml
 
 env:
   IMAGE_NAME: techworldwithnana/demo-app

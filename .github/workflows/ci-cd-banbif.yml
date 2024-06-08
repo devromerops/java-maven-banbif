@@ -5,10 +5,14 @@ on:
     branches:
       - main
       - feature/**
+    paths:
+      - .github/workflows/ci-cd-banbif.yml
   pull_request:
     branches:
       - main
       - feature/**
+    paths:
+      - .github/workflows/ci-cd-banbif.yml
 
 jobs:
   create_cache:
